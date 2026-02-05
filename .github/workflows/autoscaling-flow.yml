@@ -69,7 +69,7 @@ jobs:
             "$ECR_REGISTRY" "$ECR_REPOSITORY" "$IMAGE_TAG" \
             "$ECR_REGISTRY" "$ECR_REPOSITORY" "$IMAGE_TAG")
           aws ssm send-command \
-            --targets "key=tag:${{ secrets.ASG_TAG_KEY }},Values=${{ secrets.EC2_INSTANCE_TAG }}" \
+            --targets "Key=tag:${{ secrets.ASG_TAG_KEY }},Values=${{ secrets.EC2_INSTANCE_TAG }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploying Nginx via GitHub Actions" \
             --region $AWS_REGION \
