@@ -64,9 +64,13 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          PARAMS=$(cat <<EOF
+          {"commands":["aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $ECR_REGISTRY","sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG","sudo docker stop nginx-server || true","sudo docker rm nginx-server || true","sudo docker run -d --name nginx-server -p 80:80 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG","sudo docker image prune -f"]}
+EOF
+          )
           aws ssm send-command \
             --targets "key=tag:${{ secrets.ASG_TAG_KEY }},Values=${{ secrets.EC2_INSTANCE_TAG }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploying Nginx via GitHub Actions" \
-            --region ${{ secrets.AWS_REGION }} \
-            --parameters "{\"commands\":[\"aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}\",\"sudo docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}\",\"sudo docker stop nginx-server || true\",\"sudo docker rm nginx-server || true\",\"sudo docker run -d --name nginx-server -p 80:80 ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}\",\"sudo docker image prune -f\"]}"\n
+            --region $AWS_REGION \
+            --parameters "$PARAMS"
